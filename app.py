@@ -18,7 +18,7 @@ class App(ttk.Tk):
         self.supabase = Supabase(SUPABASE_URL, SUPABASE_KEY)
 
         self.iconbitmap("assets/images/icon.ico")
-        self.title("TKnF Show Manager")
+        self.title("TKnF Concert Manager")
 
         # Set the window size and position
         width = 1280
