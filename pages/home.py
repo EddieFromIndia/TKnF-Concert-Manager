@@ -1,6 +1,7 @@
 import uuid
 import tkinter as tk
 from tkinter import ttk, Frame, messagebox, Event, Entry
+from PIL import Image, ImageTk
 from datetime import datetime
 
 from libs.supabase_client import Supabase
@@ -114,6 +115,17 @@ class HomePage(tk.Frame):
         self.monthly_stats.grid(row=0, rowspan=2, column=1, sticky="news", padx=(30, 20))
 
         self.load_stats()
+
+        # Expand button
+        self.expand_image_normal = ImageTk.PhotoImage(Image.open("assets/images/expand.png").resize((15, 15)))
+        self.expand_image_hover = ImageTk.PhotoImage(Image.open("assets/images/expand_hover.png").resize((15, 15)))
+
+        self.expand_stats = ttk.Label(self.district_stats, image=self.expand_image_normal, background="White", cursor="hand2")
+        self.expand_stats.grid(row=0, column=1, sticky="ne", padx=(0, 15), pady=(15, 0))
+
+        self.expand_stats.bind("<Enter>", self.on_enter)
+        self.expand_stats.bind("<Leave>", self.on_leave)
+        self.expand_stats.bind("<Button-1>", lambda e: self.show_page("stats"))
 
 
     def load_stats(self):
@@ -355,6 +367,16 @@ class HomePage(tk.Frame):
         self.supabase.save_concert(concert)
         messagebox.showinfo("Success", "Concert saved successfully!")
         self.show_page("concerts")
+    
+
+    
+    def on_enter(self, event):
+        self.expand_stats.config(image=self.expand_image_hover)
+
+
+    def on_leave(self, event):
+        self.expand_stats.config(image=self.expand_image_normal)
+    
 
     def show_page(self, page_name):
         self.show_page_callback(page_name)
