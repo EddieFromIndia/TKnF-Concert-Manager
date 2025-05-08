@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import colorsys
 from pathlib import Path
 from datetime import datetime
 
@@ -376,3 +377,12 @@ def format_indian_number(number: int | str) -> str:
             parts.append(rest)
         parts.reverse()
         return ",".join(parts) + "," + last_three
+
+
+def lighten_color(hex_color, amount=0.1):
+    hex_color = hex_color.lstrip("#")
+    r, g, b = tuple(int(hex_color[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    l = min(1.0, l + amount)
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    return "#%02x%02x%02x" % (int(r*255), int(g*255), int(b*255))

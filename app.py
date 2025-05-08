@@ -1,12 +1,14 @@
 import json
-import tkinter as ttk
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap import Style
 
 from libs.supabase_client import Supabase
 from pages.home import HomePage
 from pages.concerts import ConcertsPage
 from pages.stats import StatsPage
 
-class App(ttk.Tk):
+class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
@@ -17,6 +19,7 @@ class App(ttk.Tk):
         SUPABASE_KEY = config["supabase_key"]
         self.supabase = Supabase(SUPABASE_URL, SUPABASE_KEY)
 
+        self.style = Style(theme="darkly")
         self.iconbitmap("assets/images/icon.ico")
         self.title("TKnF Concert Manager")
 

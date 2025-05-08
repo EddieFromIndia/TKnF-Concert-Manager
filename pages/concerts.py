@@ -1,11 +1,13 @@
-from tkinter import ttk, messagebox, Frame
+import tkinter as tk
+import ttkbootstrap as ttk
+from tkinter import messagebox
 from datetime import datetime
 
 from libs.supabase_client import Supabase
 from libs.utils import generate_contract_pdf, format_indian_number
 
 class ConcertsPage(ttk.Frame):
-    def __init__(self, parent: Frame, supabase: Supabase, show_page_callback):
+    def __init__(self, parent: ttk.Frame, supabase: Supabase, show_page_callback):
         super().__init__(parent)
         self.show_page_callback = show_page_callback
         self.supabase = supabase
@@ -22,8 +24,8 @@ class ConcertsPage(ttk.Frame):
 
         self.tree.pack(fill="both", expand=True, padx=20, pady=(10, 5))
 
-        self.tree.tag_configure("cancelled", background="#f8d7da")  # light red for cancelled
-        self.tree.tag_configure("today", background="#d4edda")  # light green for today
+        self.tree.tag_configure("cancelled", background="#5f1f25")  # light red for cancelled
+        self.tree.tag_configure("today", background="#1e3b2c")  # light green for today
         self.tree.bind("<<TreeviewSelect>>", self.on_concert_selected)
 
         # Action buttons

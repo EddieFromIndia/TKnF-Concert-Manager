@@ -1,76 +1,79 @@
 import uuid
-import tkinter as tk
-from tkinter import ttk, Frame, messagebox, Event, Entry
+import ttkbootstrap as ttk
+from tkinter import messagebox, Event
 from PIL import Image, ImageTk
 from datetime import datetime
 
 from libs.supabase_client import Supabase
 from libs.data import Districts
-from libs.utils import generate_contract_pdf, format_indian_number
+from libs.utils import generate_contract_pdf, format_indian_number, lighten_color
 
-class HomePage(tk.Frame):
-    def __init__(self, parent: Frame, supabase: Supabase, show_page_callback):
+class HomePage(ttk.Frame):
+    def __init__(self, parent: ttk.Frame, supabase: Supabase, show_page_callback):
         super().__init__(parent)
         self.show_page_callback = show_page_callback
         self.supabase = supabase
 
-        self.configure(padx=50, pady=30)
-        style = ttk.Style()
-        style.configure("Custom.TEntry", padding=6)
+        self.style = ttk.Style()
+        self.style.configure("Custom.TEntry", padding=6)
+        self.grid_columnconfigure(0, weight=1)
+
+        self.form = ttk.Frame(self)
+        self.form.grid(row=0, column=0, sticky="ew", padx=30, pady=30)
 
         def add_label_entry(row, text, col=0, colspan=2):
-            label = ttk.Label(self, text=text, font=("Arial", 10))
+            label = ttk.Label(self.form, text=text, font=("Arial", 10))
             label.grid(row=row, column=col, sticky="e", padx=10, pady=5)
-            entry = ttk.Entry(self, width=60, font=("Arial", 10), style="Custom.TEntry")
+            entry = ttk.Entry(self.form, width=60, font=("Arial", 10), style="Custom.TEntry")
             entry.grid(row=row, column=col+1, columnspan=colspan, sticky="ew", pady=10)
             return entry
-
+        
         self.org_entry = add_label_entry(0, "Organizer:", colspan=1)
         self.venue_entry = add_label_entry(0, "Venue:", col=2, colspan=1)
         self.city_entry = add_label_entry(1, "City:", colspan=1)
 
         
-        style.configure("Custom.TCombobox", padding=6)
-        ttk.Label(self, text="District:", font=("Arial, 10")).grid(row=1, column=2, sticky="e", padx=(0, 10), pady=5)
+        self.style.configure("Custom.TCombobox", padding=6)
+        ttk.Label(self.form, text="District:", font=("Arial, 10")).grid(row=1, column=2, sticky="e", padx=(0, 10), pady=5)
         districts = ["-- Select District --"] + Districts
-        self.district_cb = ttk.Combobox(self, width=40, state="readonly", style="Custom.TCombobox", values=districts)
+        self.district_cb = ttk.Combobox(self.form, width=40, state="readonly", style="Custom.TCombobox", values=districts)
         self.district_cb.current(0)
         self.district_cb.grid(row=1, column=3, sticky="ew")
 
         # Date & Time row
         # Date
-        ttk.Label(self, text="Date:", font=("Arial, 10")).grid(row=2, column=0, sticky="e", padx=(0, 10), pady=5)
-        self.day_cb = ttk.Combobox(self, values=[f"{d:02}" for d in range(1, 32)], width=3, state="readonly")
+        ttk.Label(self.form, text="Date:", font=("Arial, 10")).grid(row=2, column=0, sticky="e", padx=(0, 10), pady=5)
+        self.day_cb = ttk.Combobox(self.form, values=[f"{d:02}" for d in range(1, 32)], width=3, state="readonly")
         self.day_cb.current(0)
         self.day_cb.grid(row=2, column=1, sticky="w")
 
-        self.month_cb = ttk.Combobox(self, width=4, state="readonly",
+        self.month_cb = ttk.Combobox(self.form, width=4, state="readonly",
                         values=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
         self.month_cb.current(0)
         self.month_cb.grid(row=2, column=1, sticky="w", padx=(50, 0))
 
-        self.year_cb = ttk.Combobox(self, values=[f"{y:02}" for y in range(2020, 2035)], width=5, state="readonly")
+        self.year_cb = ttk.Combobox(self.form, values=[f"{y:02}" for y in range(2020, 2035)], width=5, state="readonly")
         self.year_cb.current(5)
         self.year_cb.grid(row=2, column=1, sticky="w", padx=(105, 0))
 
         # Time
-        ttk.Label(self, text="Time:", font=("Arial, 10")).grid(row=2, column=1, sticky="e", padx=(0, 150), pady=5)
-        self.hour_cb = ttk.Combobox(self, values=[f"{h:02}" for h in range(1, 13)], width=3, state="readonly")
+        ttk.Label(self.form, text="Time:", font=("Arial, 10")).grid(row=2, column=1, sticky="e", padx=(0, 150), pady=5)
+        self.hour_cb = ttk.Combobox(self.form, values=[f"{h:02}" for h in range(1, 13)], width=3, state="readonly")
         self.hour_cb.current(0)
         self.hour_cb.grid(row=2, column=1, sticky="e", padx=(0, 100))
 
-        self.min_cb = ttk.Combobox(self, values=[f"{m:02}" for m in range(0, 60, 15)], width=3, state="readonly")
+        self.min_cb = ttk.Combobox(self.form, values=[f"{m:02}" for m in range(0, 60, 15)], width=3, state="readonly")
         self.min_cb.current(0)
         self.min_cb.grid(row=2, column=1, sticky="e", padx=(0, 50))
 
-        self.ampm_cb = ttk.Combobox(self, values=["AM", "PM"], width=3, state="readonly")
+        self.ampm_cb = ttk.Combobox(self.form, values=["AM", "PM"], width=3, state="readonly")
         self.ampm_cb.current(1)
         self.ampm_cb.grid(row=2, column=1, sticky="e")
 
         # Sound checkbox
-        style.configure("Custom.TCheckbutton", font=("Arial", 10))
-        self.sound_var = tk.BooleanVar()
-        self.sound_cb = ttk.Checkbutton(self, text="With Input Sound", variable=self.sound_var, style="Custom.TCheckbutton")
+        self.style.configure("Custom.TCheckbutton", font=("Arial", 10))
+        self.sound_var = ttk.BooleanVar()
+        self.sound_cb = ttk.Checkbutton(self.form, text="With Input Sound", variable=self.sound_var, style="Custom.TCheckbutton")
         self.sound_cb.grid(row=2, column=3, sticky="w")
 
         # Contract Amount row
@@ -84,7 +87,7 @@ class HomePage(tk.Frame):
 
         # Buttons
         button_frame = ttk.Frame(self)
-        button_frame.grid(row=5, column=0, columnspan=4, pady=20)
+        button_frame.grid(row=1, column=0, pady=20)
 
         view_btn = ttk.Button(button_frame, text="View Concerts", width=16, command=lambda: self.show_page("concerts"))
         view_btn.pack(side="left", padx=5, ipady=5)
@@ -92,40 +95,35 @@ class HomePage(tk.Frame):
         clear_btn = ttk.Button(button_frame, text="Clear", command=self.clear_form)
         clear_btn.pack(side="left", padx=5, ipady=5)
 
-        save_btn = ttk.Button(button_frame, text="Save Concert", width=16, command=self.save_concert)
+        save_btn = ttk.Button(button_frame, text="Save Concert", width=16, style="success", command=self.save_concert)
         save_btn.pack(side="left", padx=5, ipady=5)
 
-        self.columnconfigure(0, weight=0)  # Labels - don't stretch
-        self.columnconfigure(1, weight=1)  # Entries - stretch
-        self.columnconfigure(2, weight=0)  # Labels - don't stretch
-        self.columnconfigure(3, weight=1)  # Entries - stretch
+        self.form.grid_columnconfigure(0, weight=0)  # Labels - don't stretch
+        self.form.grid_columnconfigure(1, weight=1)  # Entries - stretch
+        self.form.grid_columnconfigure(2, weight=0)  # Labels - don't stretch
+        self.form.grid_columnconfigure(3, weight=1)  # Entries - stretch
 
-        self.stats = tk.Frame(self)
-        self.stats.grid(row=6, column=0, sticky="ew", columnspan=4, pady=(20, 0))
+        self.stats = ttk.Frame(self)
+        self.stats.grid(row=2, column=0, sticky="ew", padx=30, pady=(20, 0))
         self.stats.grid_columnconfigure(0, weight=1)
         self.stats.grid_columnconfigure(1, weight=1)
 
-        self.yearly_stats = tk.Frame(self.stats, background="white", highlightbackground="gray", highlightthickness=1)
+        theme_bg = self.style.lookup("TFrame", "background")
+        self.card_bg = lighten_color(theme_bg, amount=0.1)
+
+        self.style.configure("Card.TFrame", background=self.card_bg, borderwidth=1, relief="solid")
+
+        self.yearly_stats = ttk.Frame(self.stats, style="Card.TFrame")
         self.yearly_stats.grid(row=0, column=0, sticky="news", padx=(20, 30), pady=(0, 10))
 
-        self.district_stats = tk.Frame(self.stats, background="white", highlightbackground="gray", highlightthickness=1)
+        self.district_stats = ttk.Frame(self.stats, style="Card.TFrame")
         self.district_stats.grid(row=1, column=0, sticky="news", padx=(20, 30), pady=(10, 0))
 
-        self.monthly_stats = tk.Frame(self.stats, background="white", highlightbackground="gray", highlightthickness=1)
+        self.monthly_stats = ttk.Frame(self.stats, style="Card.TFrame")
         self.monthly_stats.grid(row=0, rowspan=2, column=1, sticky="news", padx=(30, 20))
 
+        self.style.configure("Card.TLabel", background=self.card_bg)
         self.load_stats()
-
-        # Expand button
-        self.expand_image_normal = ImageTk.PhotoImage(Image.open("assets/images/expand.png").resize((15, 15)))
-        self.expand_image_hover = ImageTk.PhotoImage(Image.open("assets/images/expand_hover.png").resize((15, 15)))
-
-        self.expand_stats = ttk.Label(self.district_stats, image=self.expand_image_normal, background="White", cursor="hand2")
-        self.expand_stats.grid(row=0, column=1, sticky="ne", padx=(0, 15), pady=(15, 0))
-
-        self.expand_stats.bind("<Enter>", self.on_enter)
-        self.expand_stats.bind("<Leave>", self.on_leave)
-        self.expand_stats.bind("<Button-1>", lambda e: self.show_page("stats"))
 
 
     def load_stats(self):
@@ -136,14 +134,14 @@ class HomePage(tk.Frame):
         year_stats, district_stats, month_stats = self.supabase.get_stats()
 
         # Create yearly stats
-        ttk.Label(self.yearly_stats, text=f"Yearly Stats", font=("Arial Black", 12), anchor="center", background="white") \
-            .grid(row=0, column=0, columnspan=2, sticky="ew", pady=15)
+        ttk.Label(self.yearly_stats, text=f"Yearly Stats", font=("Arial Black", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=0, column=0, columnspan=2, sticky="ew", padx=2, pady=15)
         
-        ttk.Label(self.yearly_stats, text=f"Last Year: {year_stats['previous']}", font=("Arial", 12), anchor="center", background="white") \
-            .grid(row=1, column=0, sticky="ew", pady=(10, 20))
+        ttk.Label(self.yearly_stats, text=f"Last Year: {year_stats['previous']}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=1, column=0, sticky="ew", padx=2, pady=(10, 20))
         
-        ttk.Label(self.yearly_stats, text=f"This Year: {year_stats['current']}", font=("Arial", 12), anchor="center", background="white") \
-            .grid(row=1, column=1, sticky="ew", pady=(10, 20))
+        ttk.Label(self.yearly_stats, text=f"This Year: {year_stats['current']}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=1, column=1, sticky="ew", padx=2, pady=(10, 20))
         
         self.yearly_stats.grid_columnconfigure(0, weight=1)
         self.yearly_stats.grid_columnconfigure(1, weight=1)
@@ -155,14 +153,25 @@ class HomePage(tk.Frame):
         lowest_district = min({district: count for district, count in district_stats.items() if count > 0}.items(),
                               key=lambda x: x[1])
         
-        ttk.Label(self.district_stats, text=f"District Stats", font=("Arial Black", 12), anchor="center", background="white") \
-            .grid(row=0, column=0, columnspan=2, sticky="ew", pady=15)
+        ttk.Label(self.district_stats, text=f"District Stats", font=("Arial Black", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=0, column=0, columnspan=2, sticky="ew", padx=2, pady=15)
         
-        ttk.Label(self.district_stats, text=f"Highest: {highest_district[0]} ({highest_district[1]})", font=("Arial", 12), anchor="center", background="white") \
-            .grid(row=1, column=0, sticky="ew", pady=(10, 20))
+        ttk.Label(self.district_stats, text=f"Highest: {highest_district[0]} ({highest_district[1]})", font=("Arial", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=1, column=0, sticky="ew", padx=2, pady=(10, 20))
         
-        ttk.Label(self.district_stats, text=f"Lowest: {lowest_district[0]} ({lowest_district[1]})", font=("Arial", 12), anchor="center", background="white") \
-            .grid(row=1, column=1, sticky="ew", pady=(10, 20))
+        ttk.Label(self.district_stats, text=f"Lowest: {lowest_district[0]} ({lowest_district[1]})", font=("Arial", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=1, column=1, sticky="ew", padx=2, pady=(10, 20))
+        
+        # Expand button
+        self.expand_image_normal = ImageTk.PhotoImage(Image.open("assets/images/expand.png").resize((15, 15)))
+        self.expand_image_hover = ImageTk.PhotoImage(Image.open("assets/images/expand_hover.png").resize((15, 15)))
+
+        self.expand_stats = ttk.Label(self.district_stats, image=self.expand_image_normal, style="Card.TLabel", cursor="hand2")
+        self.expand_stats.grid(row=0, column=1, sticky="ne", padx=(0, 15), pady=(15, 0))
+
+        self.expand_stats.bind("<Enter>", self.on_enter)
+        self.expand_stats.bind("<Leave>", self.on_leave)
+        self.expand_stats.bind("<Button-1>", lambda e: self.show_page("stats"))
         
         self.district_stats.grid_columnconfigure(0, weight=1)
         self.district_stats.grid_columnconfigure(1, weight=1)
@@ -170,43 +179,43 @@ class HomePage(tk.Frame):
         self.district_stats.grid_rowconfigure(1, weight=1)
 
         # Create monthly stats
-        ttk.Label(self.monthly_stats, text=f"Monthly Stats", font=("Arial Black", 12), anchor="center", background="white") \
-            .grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        ttk.Label(self.monthly_stats, text=f"Monthly Stats", font=("Arial Black", 12), style="Card.TLabel", anchor="center") \
+            .grid(row=0, column=0, columnspan=2, sticky="ew", padx=2, pady=(10, 0))
         
-        ttk.Label(self.monthly_stats, text=f"January: {month_stats.get(1, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"January: {month_stats.get(1, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=1, column=0, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"February: {month_stats.get(2, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"February: {month_stats.get(2, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=2, column=0, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"March: {month_stats.get(3, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"March: {month_stats.get(3, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=3, column=0, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"April: {month_stats.get(4, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"April: {month_stats.get(4, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=4, column=0, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"May: {month_stats.get(5, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"May: {month_stats.get(5, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=5, column=0, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"June: {month_stats.get(6, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"June: {month_stats.get(6, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=6, column=0, sticky="ew", padx=30, pady=(0, 20))
         
-        ttk.Label(self.monthly_stats, text=f"July: {month_stats.get(7, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"July: {month_stats.get(7, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=1, column=1, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"August: {month_stats.get(8, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"August: {month_stats.get(8, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=2, column=1, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"September: {month_stats.get(9, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"September: {month_stats.get(9, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=3, column=1, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"October: {month_stats.get(10, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"October: {month_stats.get(10, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=4, column=1, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"November: {month_stats.get(11, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"November: {month_stats.get(11, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=5, column=1, sticky="ew", padx=30)
         
-        ttk.Label(self.monthly_stats, text=f"December: {month_stats.get(12, 0)}", font=("Arial", 12), anchor="center", background="white") \
+        ttk.Label(self.monthly_stats, text=f"December: {month_stats.get(12, 0)}", font=("Arial", 12), style="Card.TLabel", anchor="center") \
             .grid(row=6, column=1, sticky="ew", padx=30, pady=(0, 20))
         
         self.monthly_stats.grid_columnconfigure(0, weight=1)
@@ -266,7 +275,7 @@ class HomePage(tk.Frame):
             self.contact_entry,
             self.note_entry,
         ]:
-            entry.delete(0, tk.END)
+            entry.delete(0, ttk.END)
 
         self.district_cb.current(0)
         self.day_cb.current(0)
@@ -283,10 +292,10 @@ class HomePage(tk.Frame):
         self.org_entry.focus_set()
     
 
-    def on_amount_entry(self, event: Event, entry: Entry | ttk.Entry):
+    def on_amount_entry(self, event: Event, entry: ttk.Entry):
         value = entry.get()
         old_len = len(value)
-        cursor_pos = entry.index(tk.INSERT)
+        cursor_pos = entry.index(ttk.INSERT)
 
         if event.keysym == "BackSpace" and cursor_pos > 0 and self.is_comma_deleted(value):
             # Delete the character before the comma
@@ -299,7 +308,7 @@ class HomePage(tk.Frame):
         formatted = format_indian_number(value)
         new_len = len(formatted)
 
-        entry.delete(0, tk.END)
+        entry.delete(0, ttk.END)
         entry.insert(0, formatted)
 
         # Adjust cursor position
