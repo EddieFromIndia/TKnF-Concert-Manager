@@ -270,7 +270,7 @@ def generate_contract_pdf(concert: dict, paid_in_full: bool = False) -> str:
 
 def get_filepath(date: str, city: str) -> str:
     folder_name = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%B")
-    full_folder_name = os.path.join(Path.home(), "Documents", "TK&F Contracts", folder_name)
+    full_folder_name = os.path.join("D:", "LAPTOP BACKUP", "Documents", "TK&F Contracts", folder_name)
     if not os.path.exists(full_folder_name):
         os.makedirs(full_folder_name)
     return f"{full_folder_name}\\{format_date(date, False)} {city}.pdf"
